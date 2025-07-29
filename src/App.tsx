@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [page_no, setpage_no] = useState<number>(1)
   const [rows, setrows] = useState(12)
   const [first, setFirst] = useState(0);
+  const [SelectedArts, setSelectedArts] = useState([]);
 
   async function api_caller() {
     try {
@@ -30,39 +31,45 @@ const App: React.FC = () => {
     api_caller();
   }, [page_no])
 
-  // const extracter = (value) => {
-  //   arts.map((art) => {
-  //     return (
-  //       <h3>{art.value}</h3>
-  //     )
-  //   })
-  // }
-
   const onPageChange = (event) => {
     setFirst(event.first);
     setrows(event.rows);
     setpage_no((prev) => (prev + 1))
+
   };
 
-  const checkBox = (id) => {
-    return (
-      <input type="checkbox" name="" />
-    )
+  const selection = (e) => {
+    setSelectedArts(e.value)
   }
 
   return (
     <div>
-      <DataTable value={arts} dataKey="id" rows={12}>
-        <Column field="id" body={checkBox} header="Select" />
-        <Column field="title" header="Title" />
-        <Column field="place_of_origin" header="Origin" />
-        <Column field="artist_display" header="Artist" />
-        <Column field="inscriptions" header="Inscriptions" />
-        <Column field="date_start" header="Start Date" />
-        <Column field="date_end" header="End Date" />
-      </DataTable>
-      <Paginator first={first} rows={rows} totalRecords={120} onPageChange={onPageChange} />
-    </div>
+      {arts.length === 0 ? (
+        <div>
+          <span>Loading...</span>
+        </div>
+      ) : (
+        <>
+          <DataTable value={arts} dataKey="id" rows={12} selection={SelectedArts}
+            onSelectionChange={selection}>
+            <Column field="id" selectionMode="multiple" header="Select" />
+            <Column field="title" header="Title" />
+            <Column field="place_of_origin" header="Origin" />
+            <Column field="artist_display" header="Artist" />
+            <Column field="inscriptions" header="Inscriptions" />
+            <Column field="date_start" header="Start Date" />
+            <Column field="date_end" header="End Date" />
+          </DataTable>
+          <Paginator
+            first={first}
+            rows={rows}
+            totalRecords={120}
+            onPageChange={onPageChange}
+          />
+        </>
+      )
+      }
+    </div >
   )
 }
 
