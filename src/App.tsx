@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Paginator } from 'primereact/paginator';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { OverlayPanel } from 'primereact/overlaypanel';
+import { Dropdown } from 'primereact/dropdown';
+
 
 const App: React.FC = () => {
 
@@ -10,6 +13,7 @@ const App: React.FC = () => {
   const [rows, setrows] = useState(12)
   const [first, setFirst] = useState(0);
   const [SelectedArts, setSelectedArts] = useState([]);
+  const ref = useRef(null);
 
   async function api_caller() {
     try {
@@ -31,15 +35,25 @@ const App: React.FC = () => {
     api_caller();
   }, [page_no])
 
+
   const onPageChange = (event) => {
     setFirst(event.first);
     setrows(event.rows);
-    setpage_no((prev) => (prev + 1))
-
+    const currentPage = event.first / event.rows + 1;
+    setpage_no(currentPage);
   };
 
   const selection = (e) => {
-    setSelectedArts(e.value)
+    setSelectedArts(e.value);
+  }
+
+  const dropdown = (e) => {
+    ref.current.toggle(e)
+    return (
+      <OverlayPanel ref={ref}>
+        <input type="number" name="" id="" />
+      </OverlayPanel>
+    )
   }
 
   return (
@@ -52,7 +66,11 @@ const App: React.FC = () => {
         <>
           <DataTable value={arts} dataKey="id" rows={12} selection={SelectedArts}
             onSelectionChange={selection}>
-            <Column field="id" selectionMode="multiple" header="Select" />
+            <Column field="id" selectionMode="multiple" header={
+              <div onClick={dropdown} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <i className="pi pi-chevron-down" />
+              </div>
+            } />
             <Column field="title" header="Title" />
             <Column field="place_of_origin" header="Origin" />
             <Column field="artist_display" header="Artist" />
