@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react'
 import { Paginator } from 'primereact/paginator';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { InputNumber } from 'primereact/inputnumber';
+import { FloatLabel } from 'primereact/floatlabel';
 import { OverlayPanel } from 'primereact/overlaypanel';
-import { Dropdown } from 'primereact/dropdown';
-
+import { Button } from 'primereact/button';
 
 const App: React.FC = () => {
 
@@ -13,6 +14,9 @@ const App: React.FC = () => {
   const [rows, setrows] = useState(12)
   const [first, setFirst] = useState(0);
   const [SelectedArts, setSelectedArts] = useState([]);
+  const [value, setValue] = useState(null);
+
+
   const ref = useRef(null);
 
   async function api_caller() {
@@ -27,7 +31,6 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.log(error);
-
     }
   }
 
@@ -49,13 +52,53 @@ const App: React.FC = () => {
 
   const dropdown = (e) => {
     ref.current.toggle(e)
-    return (
-      <OverlayPanel ref={ref}>
-        <input type="number" name="" id="" />
-      </OverlayPanel>
-    )
   }
 
+  function rowSelection() {
+    const quotient = Math.floor(value / 12);
+    const remainder = value % 12;
+
+    for (let index = 1; index <= quotient; index++) {
+      async function fullPageCaller(page) {
+        try {
+          const res = await fetch(`https://api.artic.edu/api/v1/artworks?page=${page}`);
+          if (!res.ok) {
+            console.log("connection established: error while fetching");
+          } else {
+            const json_data = await res.json();
+            const pageData = json_data.data;
+            setSelectedArts((prev) => [...prev, ...pageData]);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      fullPageCaller(index);
+    }
+
+    if (remainder !== 0) {
+      async function remainderCaller(extraPage) {
+        try {
+          const res = await fetch(`https://api.artic.edu/api/v1/artworks?page=${extraPage}`);
+          if (!res.ok) {
+            console.log("connection established: error while fetching");
+          } else {
+            const json_data = await res.json();
+            const limited = json_data.data.slice(0, remainder);
+            setSelectedArts((prev) => [...prev, ...limited]);
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          ref.current?.hide();
+        }
+      }
+
+      remainderCaller(quotient + 1);
+    } else {
+      ref.current?.hide();
+    }
+  }
   return (
     <div>
       {arts.length === 0 ? (
@@ -67,7 +110,7 @@ const App: React.FC = () => {
           <DataTable value={arts} dataKey="id" rows={12} selection={SelectedArts}
             onSelectionChange={selection}>
             <Column field="id" selectionMode="multiple" header={
-              <div onClick={dropdown} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div onClick={dropdown} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginRight:'5px', padding:'2px'}}>
                 <i className="pi pi-chevron-down" />
               </div>
             } />
@@ -78,6 +121,17 @@ const App: React.FC = () => {
             <Column field="date_start" header="Start Date" />
             <Column field="date_end" header="End Date" />
           </DataTable>
+
+          <OverlayPanel ref={ref}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <FloatLabel>
+                <InputNumber id="number-input" value={value} onValueChange={(e) => setValue(e.value)} />
+                <label htmlFor="number-input">Select Rows</label>
+              </FloatLabel>
+              <Button onClick={rowSelection} style={{ marginTop: "10px" }}>Submit</Button>
+            </div>
+          </OverlayPanel>
+
           <Paginator
             first={first}
             rows={rows}
