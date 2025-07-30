@@ -1,33 +1,54 @@
-import React, { useState, useRef } from 'react'
-import { Paginator } from 'primereact/paginator';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { InputNumber } from 'primereact/inputnumber';
-import { FloatLabel } from 'primereact/floatlabel';
-import { OverlayPanel } from 'primereact/overlaypanel';
-import { Button } from 'primereact/button';
+import React, { useState, useRef } from "react";
+import { Paginator, type PaginatorPageChangeEvent } from "primereact/paginator";
+import {
+  DataTable,
+  type DataTableSelectionMultipleChangeEvent,
+} from "primereact/datatable";
+import { Column } from "primereact/column";
+import { InputNumber } from "primereact/inputnumber";
+import { FloatLabel } from "primereact/floatlabel";
+import { OverlayPanel } from "primereact/overlaypanel";
+import { Button } from "primereact/button";
+
+interface Art {
+  id: number;
+  title: string;
+  place_of_origin: string;
+  artist_display: string;
+  inscriptions: string;
+  date_start: number;
+  date_end: number;
+}
 
 const App: React.FC = () => {
-
-  const [arts, setarts] = useState([])
-  const [page_no, setpage_no] = useState<number>(1)
-  const [rows, setrows] = useState(12)
+  const [arts, setarts] = useState<Art[]>([]);
+  const [page_no, setpage_no] = useState<number>(1);
+  const [rows, setrows] = useState(12);
   const [first, setFirst] = useState(0);
-  const [SelectedArts, setSelectedArts] = useState([]);
-  const [value, setValue] = useState(null);
+  const [SelectedArts, setSelectedArts] = useState<Art[]>([]);
+  const [value, setValue] = useState<number>(0);
 
-
-  const ref = useRef(null);
+  const ref = useRef<OverlayPanel | null>(null);
 
   async function api_caller() {
     try {
-      const data = await fetch(`https://api.artic.edu/api/v1/artworks?page=${page_no}`);
+      const data = await fetch(
+        `https://api.artic.edu/api/v1/artworks?page=${page_no}`
+      );
       if (!data.ok) {
         console.log("connection estabilished: error while fecting");
-      }
-      else {
+      } else {
         const json_data = await data.json();
-        setarts(json_data.data)
+        const obj = json_data.data.map((art: Art) => ({
+          id: art.id,
+          title: art.title,
+          place_of_origin: art.place_of_origin,
+          artist_display: art.artist_display,
+          inscriptions: art.inscriptions,
+          date_start: art.date_start,
+          date_end: art.date_end,
+        }));
+        setarts(obj);
       }
     } catch (error) {
       console.log(error);
@@ -36,32 +57,33 @@ const App: React.FC = () => {
 
   React.useEffect(() => {
     api_caller();
-  }, [page_no])
+  }, [page_no]);
 
-
-  const onPageChange = (event) => {
+  const onPageChange = (event: PaginatorPageChangeEvent) => {
     setFirst(event.first);
     setrows(event.rows);
     const currentPage = event.first / event.rows + 1;
     setpage_no(currentPage);
   };
 
-  const selection = (e) => {
+  const selection = (e: DataTableSelectionMultipleChangeEvent<Art[]>) => {
     setSelectedArts(e.value);
-  }
+  };
 
-  const dropdown = (e) => {
-    ref.current.toggle(e)
-  }
+  const dropdown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (ref.current) ref.current.toggle(e);
+  };
 
   function rowSelection() {
     const quotient = Math.floor(value / 12);
     const remainder = value % 12;
 
     for (let index = 1; index <= quotient; index++) {
-      async function fullPageCaller(page) {
+      async function fullPageCaller(page: number) {
         try {
-          const res = await fetch(`https://api.artic.edu/api/v1/artworks?page=${page}`);
+          const res = await fetch(
+            `https://api.artic.edu/api/v1/artworks?page=${page}`
+          );
           if (!res.ok) {
             console.log("connection established: error while fetching");
           } else {
@@ -77,9 +99,11 @@ const App: React.FC = () => {
     }
 
     if (remainder !== 0) {
-      async function remainderCaller(extraPage) {
+      async function remainderCaller(extraPage: number) {
         try {
-          const res = await fetch(`https://api.artic.edu/api/v1/artworks?page=${extraPage}`);
+          const res = await fetch(
+            `https://api.artic.edu/api/v1/artworks?page=${extraPage}`
+          );
           if (!res.ok) {
             console.log("connection established: error while fetching");
           } else {
@@ -107,13 +131,33 @@ const App: React.FC = () => {
         </div>
       ) : (
         <>
-          <DataTable value={arts} dataKey="id" rows={12} selection={SelectedArts}
-            onSelectionChange={selection}>
-            <Column field="id" selectionMode="multiple" header={
-              <div onClick={dropdown} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginRight:'5px', padding:'2px'}}>
-                <i className="pi pi-chevron-down" />
-              </div>
-            } />
+          <DataTable
+            value={arts}
+            dataKey="id"
+            rows={12}
+            selection={SelectedArts}
+            onSelectionChange={selection}
+            selectionMode={"multiple"}
+          >
+            <Column
+              field="id"
+              selectionMode="multiple"
+              header={
+                <div
+                  onClick={dropdown}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                    marginRight: "5px",
+                    padding: "2px",
+                  }}
+                >
+                  <i className="pi pi-chevron-down" />
+                </div>
+              }
+            />
             <Column field="title" header="Title" />
             <Column field="place_of_origin" header="Origin" />
             <Column field="artist_display" header="Artist" />
@@ -123,12 +167,26 @@ const App: React.FC = () => {
           </DataTable>
 
           <OverlayPanel ref={ref}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
               <FloatLabel>
-                <InputNumber id="number-input" value={value} onValueChange={(e) => setValue(e.value)} />
+                <InputNumber
+                  id="number-input"
+                  value={value}
+                  onValueChange={(e) => setValue(e.value as number)}
+                />
                 <label htmlFor="number-input">Select Rows</label>
               </FloatLabel>
-              <Button onClick={rowSelection} style={{ marginTop: "10px" }}>Submit</Button>
+              <Button onClick={rowSelection} style={{ marginTop: "10px" }}>
+                Submit
+              </Button>
             </div>
           </OverlayPanel>
 
@@ -139,10 +197,9 @@ const App: React.FC = () => {
             onPageChange={onPageChange}
           />
         </>
-      )
-      }
-    </div >
-  )
-}
+      )}
+    </div>
+  );
+};
 
-export default App
+export default App;
