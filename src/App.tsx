@@ -76,10 +76,8 @@ const App: React.FC = () => {
     setSelectedIds(prev => {
       const newSet = new Set(prev);
       
-      // Remove all current page items from selection
       currentPageIds.forEach(id => newSet.delete(id));
       
-      // Add newly selected items from current page
       selectedIds.forEach(id => newSet.add(id));
       
       return newSet;
