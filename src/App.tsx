@@ -70,8 +70,20 @@ const App: React.FC = () => {
   };
 
   const selection = (e: DataTableSelectionMultipleChangeEvent<Art[]>) => {
-    const ids = e.value.map(art => art.id);
-    setSelectedIds(new Set(ids));
+    const currentPageIds = arts.map(art => art.id);
+    const selectedIds = e.value.map(art => art.id);
+    
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      
+      // Remove all current page items from selection
+      currentPageIds.forEach(id => newSet.delete(id));
+      
+      // Add newly selected items from current page
+      selectedIds.forEach(id => newSet.add(id));
+      
+      return newSet;
+    });
   };
 
   const dropdown = (e: React.MouseEvent<HTMLDivElement>) => {
