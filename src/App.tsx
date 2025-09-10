@@ -9,6 +9,9 @@ import { InputNumber } from "primereact/inputnumber";
 import { FloatLabel } from "primereact/floatlabel";
 import { OverlayPanel } from "primereact/overlaypanel";
 import { Button } from "primereact/button";
+import "primereact/resources/themes/lara-light-cyan/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
 
 interface Art {
   id: number;
@@ -25,33 +28,33 @@ const App: React.FC = () => {
   const [page_no, setpage_no] = useState<number>(1);
   const [rows, setrows] = useState(12);
   const [first, setFirst] = useState(0);
-  const [SelectedArts, setSelectedArts] = useState<Art[]>([]);
   const [value, setValue] = useState<number>(0);
+  const [selectedArts, setSelectedArts] = useState<Art[]>([]);
 
   const ref = useRef<OverlayPanel | null>(null);
-
+ 
   async function api_caller() {
     try {
       const data = await fetch(
         `https://api.artic.edu/api/v1/artworks?page=${page_no}`
       );
       if (!data.ok) {
-        console.log("connection estabilished: error while fecting");
-      } else {
-        const json_data = await data.json();
-        const obj = json_data.data.map((art: Art) => ({
-          id: art.id,
-          title: art.title,
-          place_of_origin: art.place_of_origin,
-          artist_display: art.artist_display,
-          inscriptions: art.inscriptions,
-          date_start: art.date_start,
-          date_end: art.date_end,
-        }));
-        setarts(obj);
+        console.error("Connection established: error while fetching data", data.status);
+        return;
       }
+      const json_data = await data.json();
+      const obj = json_data.data.map((art: Art) => ({
+        id: art.id,
+        title: art.title,
+        place_of_origin: art.place_of_origin,
+        artist_display: art.artist_display,
+        inscriptions: art.inscriptions,
+        date_start: art.date_start,
+        date_end: art.date_end,
+      }));
+      setarts(obj);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching data:", error);
     }
   }
 
@@ -85,14 +88,14 @@ const App: React.FC = () => {
             `https://api.artic.edu/api/v1/artworks?page=${page}`
           );
           if (!res.ok) {
-            console.log("connection established: error while fetching");
-          } else {
-            const json_data = await res.json();
-            const pageData = json_data.data;
-            setSelectedArts((prev) => [...prev, ...pageData]);
+            console.error(`Connection established: error while fetching page ${page}`, res.status);
+            return;
           }
+          const json_data = await res.json();
+          const pageData = json_data.data;
+          setSelectedArts((prev: Art[]) => [...prev, ...pageData]);
         } catch (error) {
-          console.log(error);
+          console.error(`Error fetching page ${page}:`, error);
         }
       }
       fullPageCaller(index);
@@ -105,14 +108,14 @@ const App: React.FC = () => {
             `https://api.artic.edu/api/v1/artworks?page=${extraPage}`
           );
           if (!res.ok) {
-            console.log("connection established: error while fetching");
-          } else {
-            const json_data = await res.json();
-            const limited = json_data.data.slice(0, remainder);
-            setSelectedArts((prev) => [...prev, ...limited]);
+            console.error(`Connection established: error while fetching page ${extraPage}`, res.status);
+            return;
           }
+          const json_data = await res.json();
+          const limited = json_data.data.slice(0, remainder);
+          setSelectedArts((prev: Art[]) => [...prev, ...limited]);
         } catch (error) {
-          console.log(error);
+          console.error(`Error fetching page ${extraPage}:`, error);
         } finally {
           ref.current?.hide();
         }
@@ -131,20 +134,10 @@ const App: React.FC = () => {
         </div>
       ) : (
         <>
-          <DataTable
-            value={arts}
-            dataKey="id"
-            rows={12}
-            selection={SelectedArts}
-            onSelectionChange={selection}
-            selectionMode={"multiple"}
-          >
-            <Column
-              field="id"
-              selectionMode="multiple"
+          <DataTable value={arts} dataKey="id" rows={12} selection={selectedArts} onSelectionChange={selection} selectionMode={"multiple"}>
+            <Column field="id" selectionMode="multiple"
               header={
-                <div
-                  onClick={dropdown}
+                <div onClick={dropdown}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -152,8 +145,7 @@ const App: React.FC = () => {
                     cursor: "pointer",
                     marginRight: "5px",
                     padding: "2px",
-                  }}
-                >
+                  }}>
                   <i className="pi pi-chevron-down" />
                 </div>
               }
@@ -190,12 +182,7 @@ const App: React.FC = () => {
             </div>
           </OverlayPanel>
 
-          <Paginator
-            first={first}
-            rows={rows}
-            totalRecords={120}
-            onPageChange={onPageChange}
-          />
+          <Paginator first={first} rows={rows} totalRecords={120} onPageChange={onPageChange} />
         </>
       )}
     </div>
