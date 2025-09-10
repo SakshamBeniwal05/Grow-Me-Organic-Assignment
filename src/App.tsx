@@ -29,7 +29,7 @@ const App: React.FC = () => {
   const [rows, setrows] = useState(12);
   const [first, setFirst] = useState(0);
   const [value, setValue] = useState<number>(0);
-  const [selectedArts, setSelectedArts] = useState<Art[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const ref = useRef<OverlayPanel | null>(null);
  
@@ -70,7 +70,8 @@ const App: React.FC = () => {
   };
 
   const selection = (e: DataTableSelectionMultipleChangeEvent<Art[]>) => {
-    setSelectedArts(e.value);
+    const ids = e.value.map(art => art.id);
+    setSelectedIds(new Set(ids));
   };
 
   const dropdown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -93,7 +94,8 @@ const App: React.FC = () => {
           }
           const json_data = await res.json();
           const pageData = json_data.data;
-          setSelectedArts((prev: Art[]) => [...prev, ...pageData]);
+          const ids = pageData.map((art: Art) => art.id);
+          setSelectedIds((prev: Set<number>) => new Set([...prev, ...ids]));
         } catch (error) {
           console.error(`Error fetching page ${page}:`, error);
         }
@@ -113,7 +115,8 @@ const App: React.FC = () => {
           }
           const json_data = await res.json();
           const limited = json_data.data.slice(0, remainder);
-          setSelectedArts((prev: Art[]) => [...prev, ...limited]);
+          const ids = limited.map((art: Art) => art.id);
+          setSelectedIds((prev: Set<number>) => new Set([...prev, ...ids]));
         } catch (error) {
           console.error(`Error fetching page ${extraPage}:`, error);
         } finally {
@@ -134,7 +137,7 @@ const App: React.FC = () => {
         </div>
       ) : (
         <>
-          <DataTable value={arts} dataKey="id" rows={12} selection={selectedArts} onSelectionChange={selection} selectionMode={"multiple"}>
+          <DataTable value={arts} dataKey="id" rows={12} selection={arts.filter(art => selectedIds.has(art.id))} onSelectionChange={selection} selectionMode={"multiple"}>
             <Column field="id" selectionMode="multiple"
               header={
                 <div onClick={dropdown}
