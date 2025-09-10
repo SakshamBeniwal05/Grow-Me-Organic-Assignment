@@ -1,9 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Paginator, type PaginatorPageChangeEvent } from "primereact/paginator";
-import {
-  DataTable,
-  type DataTableSelectionMultipleChangeEvent,
-} from "primereact/datatable";
+import { DataTable, type DataTableSelectionMultipleChangeEvent } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { InputNumber } from "primereact/inputnumber";
 import { FloatLabel } from "primereact/floatlabel";
