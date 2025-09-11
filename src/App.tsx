@@ -126,7 +126,6 @@ const App: React.FC = () => {
           ref.current?.hide();
         }
       }
-
       remainderCaller(quotient + 1);
     } else {
       ref.current?.hide();
