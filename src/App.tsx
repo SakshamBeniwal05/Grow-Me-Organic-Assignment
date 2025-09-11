@@ -21,12 +21,13 @@ interface Art {
 }
 
 const App: React.FC = () => {
+
   const [arts, setarts] = useState<Art[]>([]);
   const [page_no, setpage_no] = useState<number>(1);
   const [rows, setrows] = useState(12);
   const [first, setFirst] = useState(0);
   const [value, setValue] = useState<number>(0);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   const ref = useRef<OverlayPanel | null>(null);
  
@@ -66,18 +67,13 @@ const App: React.FC = () => {
     setpage_no(currentPage);
   };
 
-  const selection = (e: DataTableSelectionMultipleChangeEvent<Art[]>) => {
-    const currentPageIds = arts.map(art => art.id);
-    const selectedIds = e.value.map(art => art.id);
-    
-    setSelectedIds(prev => {
-      const newSet = new Set(prev);
-      
-      currentPageIds.forEach(id => newSet.delete(id));
-      
-      selectedIds.forEach(id => newSet.add(id));
-      
-      return newSet;
+  const handleSelection = (itemId: number) => {
+    setSelectedItems(prevSelected => {
+      if (prevSelected.includes(itemId)) {
+        return prevSelected.filter(id => id !== itemId);
+      } else {
+        return [...prevSelected, itemId];
+      }
     });
   };
 
@@ -102,7 +98,7 @@ const App: React.FC = () => {
           const json_data = await res.json();
           const pageData = json_data.data;
           const ids = pageData.map((art: Art) => art.id);
-          setSelectedIds((prev: Set<number>) => new Set([...prev, ...ids]));
+          setSelectedItems((prev: number[]) => Array.from(new Set([...prev, ...ids])));
         } catch (error) {
           console.error(`Error fetching page ${page}:`, error);
         }
@@ -123,7 +119,7 @@ const App: React.FC = () => {
           const json_data = await res.json();
           const limited = json_data.data.slice(0, remainder);
           const ids = limited.map((art: Art) => art.id);
-          setSelectedIds((prev: Set<number>) => new Set([...prev, ...ids]));
+          setSelectedItems((prev: number[]) => Array.from(new Set([...prev, ...ids])));
         } catch (error) {
           console.error(`Error fetching page ${extraPage}:`, error);
         } finally {
@@ -136,6 +132,7 @@ const App: React.FC = () => {
       ref.current?.hide();
     }
   }
+
   return (
     <div>
       {arts.length === 0 ? (
@@ -144,7 +141,14 @@ const App: React.FC = () => {
         </div>
       ) : (
         <>
-          <DataTable value={arts} dataKey="id" rows={12} selection={arts.filter(art => selectedIds.has(art.id))} onSelectionChange={selection} selectionMode={"multiple"}>
+          <DataTable
+            value={arts}
+            dataKey="id"
+            rows={12}
+            selection={arts.filter(art => selectedItems.includes(art.id))}
+            onRowClick={e => handleSelection(e.data.id)}
+            selectionMode={"multiple"}
+          >
             <Column field="id" selectionMode="multiple"
               header={
                 <div onClick={dropdown}
