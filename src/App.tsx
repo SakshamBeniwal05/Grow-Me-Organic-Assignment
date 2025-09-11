@@ -140,14 +140,10 @@ const App: React.FC = () => {
         </div>
       ) : (
         <>
-          <DataTable
-            value={arts}
-            dataKey="id"
-            rows={12}
-            selection={arts.filter(art => selectedItems.includes(art.id))}
-            onRowClick={e => handleSelection(e.data.id)}
-            selectionMode={"multiple"}
-          >
+          <DataTable value={arts} dataKey="id" rows={12}
+            selection={arts.filter(art => selectedItems.includes(art.id))} onRowClick={e => handleSelection(e.data.id)}
+            selectionMode="multiple">
+
             <Column field="id" selectionMode="multiple"
               header={
                 <div onClick={dropdown}
@@ -161,8 +157,8 @@ const App: React.FC = () => {
                   }}>
                   <i className="pi pi-chevron-down" />
                 </div>
-              }
-            />
+              }/>
+
             <Column field="title" header="Title" />
             <Column field="place_of_origin" header="Origin" />
             <Column field="artist_display" header="Artist" />
@@ -179,8 +175,7 @@ const App: React.FC = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-              }}
-            >
+              }}>
               <FloatLabel>
                 <InputNumber
                   id="number-input"
